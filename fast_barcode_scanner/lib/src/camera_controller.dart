@@ -232,6 +232,7 @@ class _CameraController implements CameraController {
   Future<void> pauseCamera() async {
     try {
       await _platform.stop();
+      state._error = null;
       events.value = ScannerEvent.paused;
     } catch (error) {
       state._error = error;
@@ -244,6 +245,7 @@ class _CameraController implements CameraController {
   Future<void> resumeCamera() async {
     try {
       await _platform.start();
+      state._error = null;
       events.value = ScannerEvent.resumed;
     } catch (error) {
       state._error = error;
@@ -256,6 +258,7 @@ class _CameraController implements CameraController {
   Future<void> pauseScanner() async {
     try {
       await _platform.stopDetector();
+      state._error = null;
     } catch (error) {
       state._error = error;
       events.value = ScannerEvent.error;
@@ -267,6 +270,7 @@ class _CameraController implements CameraController {
   Future<void> resumeScanner() async {
     try {
       await _platform.startDetector();
+      state._error = null;
     } catch (error) {
       state._error = error;
       events.value = ScannerEvent.error;
