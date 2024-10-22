@@ -20,26 +20,26 @@ struct ScannerConfiguration {
     }
 
     init?(_ args: Any?) {
-        guard
-                let dict = args as? [String: Any],
-                let position = cameraPositions[dict["pos"] as? String ?? ""],
-                let resolution = Resolution(rawValue: dict["res"] as? String ?? ""),
-                let framerate = Framerate(rawValue: dict["fps"] as? String ?? ""),
-                let detectionMode = DetectionMode(rawValue: dict["mode"] as? String ?? ""),
-                let codes = dict["types"] as? [String],
-                let apiMode = ApiMode(rawValue: dict["apiMode"] as? String ?? ""),
-                let confidence = dict["confidence"] as? Double
-                else {
+        guard let dict = args as? [String: Any] else {
             return nil
         }
 
-        self.init(position: position,
-                framerate: framerate,
-                resolution: resolution,
-                mode: detectionMode,
-                codes: codes,
-                apiMode: apiMode,
-                confidence: confidence
+        let position = cameraPositions[dict["pos"] as? String ?? ""]
+        let framerate = Framerate(rawValue: dict["fps"] as? String ?? "")
+        let resolution = Resolution(rawValue: dict["res"] as? String ?? "")
+        let mode = DetectionMode(rawValue: dict["mode"] as? String ?? "")
+        let codes = dict["types"] as? [String]
+        let apiMode = ApiMode(rawValue: dict["apiMode"] as? String ?? "")
+        let confidence = dict["confidence"] as? Double
+
+        self.init(
+            position: position ?? AVCaptureDevice.Position.back,
+            framerate: framerate ?? Framerate.fps30,
+            resolution: resolution ?? Resolution.hd720,
+            mode: mode ?? DetectionMode.pauseDetection,
+            codes: codes ?? [],
+            apiMode: apiMode ?? ApiMode.avFoundation,
+            confidence: confidence ?? 0.6
         )
     }
 
