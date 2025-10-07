@@ -1,22 +1,20 @@
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
-
-import '../../fast_barcode_scanner_platform_interface.dart';
+import 'package:fast_barcode_scanner_platform_interface/fast_barcode_scanner_platform_interface.dart';
 
 /// Describes a Barcode with type and value.
 /// [Barcode] is value-equatable.
 class Barcode {
   /// Creates a [Barcode] from a Flutter Message Protocol
   Barcode(List<dynamic> data)
-      : type = BarcodeType.values.firstWhere((e) => describeEnum(e) == data[0]),
-        value = data[1],
-        valueType = data.length > 2
-            ? data[2] != null
+    : type = BarcodeType.values.firstWhere((e) => e.name == data[0]),
+      value = data[1],
+      valueType = data.length > 2
+          ? data[2] != null
                 ? BarcodeValueType.values[data[2]]
                 : null
-            : null,
-        cornerPoints = data.length > 3 ? parsePointList(data[3]) : null;
+          : null,
+      cornerPoints = data.length > 3 ? parsePointList(data[3]) : null;
 
   /// The type of the barcode.
   ///
@@ -43,19 +41,10 @@ class Barcode {
 
   @override
   bool operator ==(Object other) =>
-      other is Barcode &&
-      other.type == type &&
-      other.value == value &&
-      other.valueType == valueType &&
-      other.cornerPoints == cornerPoints;
+      other is Barcode && other.type == type && other.value == value && other.valueType == valueType && other.cornerPoints == cornerPoints;
 
   @override
-  int get hashCode =>
-      super.hashCode ^
-      type.hashCode ^
-      value.hashCode ^
-      valueType.hashCode ^
-      cornerPoints.hashCode;
+  int get hashCode => super.hashCode ^ type.hashCode ^ value.hashCode ^ valueType.hashCode ^ cornerPoints.hashCode;
 
   @override
   String toString() {

@@ -5,42 +5,40 @@ import 'package:flutter/material.dart';
 typedef CodeBorderPaintBuilder = Paint Function(Barcode code);
 typedef CodeValueDisplayBuilder = CodeValueDisplay? Function(Barcode code);
 
+/// Draws a boundary around detected `Barcode`s.
 class CodeBoundaryOverlay extends StatefulWidget {
   final CodeBorderPaintBuilder? codeBorderPaintBuilder;
   final CodeValueDisplayBuilder? codeValueDisplayBuilder;
 
-  const CodeBoundaryOverlay({
-    Key? key,
-    this.codeBorderPaintBuilder,
-    this.codeValueDisplayBuilder,
-  }) : super(key: key);
+  const CodeBoundaryOverlay({Key? key, this.codeBorderPaintBuilder, this.codeValueDisplayBuilder}) : super(key: key);
 
   @override
   State<CodeBoundaryOverlay> createState() => _CodeBoundaryOverlayState();
 }
 
 class _CodeBoundaryOverlayState extends State<CodeBoundaryOverlay> {
-  final _cameraController = CameraController();
+  final _cameraController = CameraController.shared;
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<List<Barcode>>(
-        valueListenable: _cameraController.scannedBarcodes,
-        builder: (context, barcodes, child) {
-          final analysisSize = _cameraController.analysisSize;
-          if (analysisSize != null && barcodes.isNotEmpty) {
-            return CustomPaint(
-              painter: CodeBorderPainter(
-                imageSize: analysisSize,
-                barcodes: barcodes,
-                barcodePaintSelector: widget.codeBorderPaintBuilder,
-                textDecorator: widget.codeValueDisplayBuilder,
-              ),
-            );
-          } else {
-            return Container();
-          }
-        });
+      valueListenable: _cameraController.resultNotifier,
+      builder: (context, barcodes, child) {
+        final analysisSize = _cameraController.state.value.cameraInformation?.analysisSize;
+        if (analysisSize != null && barcodes.isNotEmpty) {
+          return CustomPaint(
+            painter: CodeBorderPainter(
+              imageSize: analysisSize,
+              barcodes: barcodes,
+              barcodePaintSelector: widget.codeBorderPaintBuilder,
+              textDecorator: widget.codeValueDisplayBuilder,
+            ),
+          );
+        } else {
+          return Container();
+        }
+      },
+    );
   }
 }
 
@@ -52,10 +50,7 @@ abstract class CodeValueDisplay {
 
   TextSpan get textSpan;
 
-  CodeValueDisplay({
-    required this.color,
-    this.location = CodeValueDisplayLocation.centerBottom,
-  });
+  CodeValueDisplay({required this.color, this.location = CodeValueDisplayLocation.centerBottom});
 }
 
 class BasicBarcodeValueDisplay extends CodeValueDisplay {
@@ -78,12 +73,7 @@ class BasicBarcodeValueDisplay extends CodeValueDisplay {
 
   @override
   TextSpan get textSpan => TextSpan(
-        style: TextStyle(
-            color: color,
-            fontSize: fontSize,
-            backgroundColor: backgroundColor,
-            fontWeight: fontWeight,
-            fontFamily: fontFamily),
-        text: text,
-      );
+    style: TextStyle(color: color, fontSize: fontSize, backgroundColor: backgroundColor, fontWeight: fontWeight, fontFamily: fontFamily),
+    text: text,
+  );
 }

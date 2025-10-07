@@ -1,31 +1,31 @@
 import 'package:fast_barcode_scanner/fast_barcode_scanner.dart';
-import 'package:fast_barcode_scanner_example/scanning_screen/scanning_overlay_config.dart';
+import 'package:fast_barcode_scanner_example/configure_screen/configure_screen.dart';
+import 'package:fast_barcode_scanner_example/scan_history.dart';
+import 'package:fast_barcode_scanner_example/scanning_screen/scans_counter.dart';
+import 'package:fast_barcode_scanner_example/utils.dart';
 import 'package:flutter/material.dart';
-
-import '../configure_screen/configure_screen.dart';
-import '../scan_history.dart';
-import '../utils.dart';
-import 'scans_counter.dart';
 
 class ScanningScreen extends StatefulWidget {
   const ScanningScreen({
-    Key? key,
+    super.key,
+    this.apiMode = const ApiMode(),
     required this.dispose,
-    this.apiMode = IOSApiMode.avFoundation,
-  }) : super(key: key);
+  });
 
+  final ApiMode apiMode;
   final bool dispose;
-  final IOSApiMode? apiMode;
 
   @override
-  _ScanningScreenState createState() => _ScanningScreenState();
+  State<ScanningScreen> createState() => _ScanningScreenState();
 }
 
 class _ScanningScreenState extends State<ScanningScreen> {
   final _torchIconState = ValueNotifier(false);
   final _cameraRunning = ValueNotifier(true);
   final _scannerRunning = ValueNotifier(true);
+
   bool _isShowingBottomSheet = false;
+
   final greenPaint = Paint()
     ..style = PaintingStyle.stroke
     ..strokeWidth = 2.0
@@ -39,15 +39,14 @@ class _ScanningScreenState extends State<ScanningScreen> {
     ..strokeJoin = StrokeJoin.bevel
     ..color = Colors.orange;
 
-  ScanningOverlayConfig _scanningOverlayConfig = ScanningOverlayConfig(
-    availableOverlays: ScanningOverlayType.values,
-    enabledOverlays: [
-      ScanningOverlayType.materialOverlay,
-      ScanningOverlayType.codeBoundaryOverlay,
-    ],
-  );
+  final availableOverlays = ["Boundary", "Material", "Blur"];
 
-  final cam = CameraController();
+  var enabledOverlays = [
+    "Material",
+    "Boundary",
+  ];
+
+  final cam = CameraController.shared;
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +63,8 @@ class _ScanningScreenState extends State<ScanningScreen> {
           IconButton(
             icon: const Icon(Icons.info),
             onPressed: () {
-              final preview = cam.state.previewConfig;
+              final preview = cam.state.value.cameraInformation;
+
               if (preview != null) {
                 showDialog(
                   context: context,
@@ -72,14 +72,7 @@ class _ScanningScreenState extends State<ScanningScreen> {
                     title: const Text("Preview Config"),
                     content: Column(
                       mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text("Texture Id: ${preview.textureId}"),
-                        Text(
-                            "Preview (WxH): ${preview.width}x${preview.height}"),
-                        Text("Analysis (WxH): ${preview.analysisResolution}"),
-                        Text(
-                            "Target Rotation (unused): ${preview.targetRotation}"),
-                      ],
+                      children: [Text(preview.toString())],
                     ),
                   ),
                 );
@@ -95,34 +88,28 @@ class _ScanningScreenState extends State<ScanningScreen> {
           BarcodeType.code128,
           BarcodeType.qr,
         ],
-        resolution: Resolution.hd720,
-        framerate: Framerate.fps30,
+        // mode: PerformanceMode.system,
         mode: DetectionMode.continuous,
         position: CameraPosition.back,
-        apiMode: widget.apiMode,
+        api: widget.apiMode,
         onScan: (code) {
           history.addAll(code);
         },
+        dispose: widget.dispose,
         children: [
-          if (_scanningOverlayConfig.enabledOverlays
-              .contains(ScanningOverlayType.materialOverlay))
+          if (enabledOverlays.contains("Material"))
             MaterialPreviewOverlay(
-              rectOfInterest: RectOfInterest.wide(), // this can be wide or square
-              onScan: (codes) {
-                // these are codes that only appear within the finder rectangle
-              },
+              rectOfInterest: RectOfInterest.wide(),
+              onScan: (codes) {},
               showSensing: true,
-              onScannedBoundaryColorSelector: (codes) {
+              onScannedBoundsColor: (codes) {
                 if (codes.isNotEmpty) {
-                  return codes.first.value.hashCode % 2 == 0
-                      ? Colors.orange
-                      : Colors.green;
+                  return codes.first.value.hashCode % 2 == 0 ? Colors.orange : Colors.green;
                 }
                 return null;
               },
             ),
-          if (_scanningOverlayConfig.enabledOverlays
-              .contains(ScanningOverlayType.codeBoundaryOverlay))
+          if (enabledOverlays.contains(("Boundary")))
             CodeBoundaryOverlay(
               codeBorderPaintBuilder: (code) {
                 return code.value.hashCode % 2 == 0 ? orangePaint : greenPaint;
@@ -130,18 +117,13 @@ class _ScanningScreenState extends State<ScanningScreen> {
               codeValueDisplayBuilder: (code) {
                 return BasicBarcodeValueDisplay(
                   text: code.value,
-                  color: code.value.hashCode % 2 == 0
-                      ? Colors.orange
-                      : Colors.green,
+                  color: code.value.hashCode % 2 == 0 ? Colors.orange : Colors.green,
                   location: CodeValueDisplayLocation.centerTop,
                 );
               },
             ),
-          if (_scanningOverlayConfig.enabledOverlays
-              .contains(ScanningOverlayType.blurPreview))
-            const BlurPreviewOverlay()
+          if (enabledOverlays.contains("Blur")) const BlurPreviewOverlay()
         ],
-        dispose: widget.dispose,
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -173,21 +155,19 @@ class _ScanningScreenState extends State<ScanningScreen> {
                                 builder: (context, isRunning, _) {
                                   return ElevatedButton(
                                     onPressed: () {
-                                      final future = isRunning
-                                          ? cam.pauseCamera()
-                                          : cam.resumeCamera();
+                                      final future = isRunning ? cam.pauseCamera() : cam.resumeCamera();
 
-                                      future
-                                          .then((_) =>
-                                              _cameraRunning.value = !isRunning)
-                                          .catchError((error, stack) {
+                                      future.then((_) {
+                                        _cameraRunning.value = !isRunning;
+                                      }).catchError((error, stack) {
                                         presentErrorAlert(
-                                            context, error, stack);
+                                          context,
+                                          error,
+                                          stack,
+                                        );
                                       });
                                     },
-                                    child: Text(isRunning
-                                        ? 'Pause Camera'
-                                        : 'Resume Camera'),
+                                    child: Text(isRunning ? 'Pause Camera' : 'Resume Camera'),
                                   );
                                 }),
                             ValueListenableBuilder<bool>(
@@ -195,39 +175,36 @@ class _ScanningScreenState extends State<ScanningScreen> {
                                 builder: (context, isRunning, _) {
                                   return ElevatedButton(
                                     onPressed: () {
-                                      final future = isRunning
-                                          ? cam.pauseScanner()
-                                          : cam.resumeScanner();
+                                      final future = isRunning ? cam.pauseScanner() : cam.resumeScanner();
 
-                                      future
-                                          .then((_) => _scannerRunning.value =
-                                              !isRunning)
-                                          .catchError((error, stackTrace) {
+                                      future.then((_) {
+                                        _scannerRunning.value = !isRunning;
+                                      }).catchError((error, stackTrace) {
                                         presentErrorAlert(
-                                            context, error, stackTrace);
+                                          context,
+                                          error,
+                                          stackTrace,
+                                        );
                                       });
                                     },
-                                    child: Text(isRunning
-                                        ? 'Pause Scanner'
-                                        : 'Resume Scanner'),
+                                    child: Text(isRunning ? 'Pause Scanner' : 'Resume Scanner'),
                                   );
                                 }),
                             ValueListenableBuilder<bool>(
                               valueListenable: _torchIconState,
-                              builder: (context, isTorchActive, _) =>
-                                  ElevatedButton(
+                              builder: (context, isTorchActive, _) => ElevatedButton(
                                 onPressed: () {
-                                  cam
-                                      .toggleTorch()
-                                      .then((torchState) =>
-                                          _torchIconState.value = torchState)
-                                      .catchError((error, stackTrace) {
+                                  cam.toggleTorch().then((torchState) {
+                                    _torchIconState.value = torchState;
+                                  }).catchError((error, stackTrace) {
                                     presentErrorAlert(
-                                        context, error, stackTrace);
+                                      context,
+                                      error,
+                                      stackTrace,
+                                    );
                                   });
                                 },
-                                child: Text(
-                                    'Torch: ${isTorchActive ? 'on' : 'off'}'),
+                                child: Text('Torch: ${isTorchActive ? 'on' : 'off'}'),
                               ),
                             ),
                           ],
@@ -236,7 +213,7 @@ class _ScanningScreenState extends State<ScanningScreen> {
                           children: [
                             ElevatedButton(
                               onPressed: () async {
-                                final config = cam.state.scannerConfig;
+                                final config = cam.state.value.scannerConfig;
                                 if (config != null) {
                                   // swallow errors
                                   cam.pauseCamera().catchError((_, __) {});
@@ -244,23 +221,13 @@ class _ScanningScreenState extends State<ScanningScreen> {
                                   await Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => ConfigureScreen(
-                                        config,
-                                        _scanningOverlayConfig,
-                                        onOverlayConfigurationChanged:
-                                            (overlayConfig) {
-                                          setState(() {
-                                            _scanningOverlayConfig =
-                                                overlayConfig;
-                                          });
-                                        },
-                                      ),
+                                      builder: (_) => const ConfigureScreen(),
                                     ),
                                   );
 
-                                  cam.resumeCamera().catchError((error,
-                                          stack) =>
-                                      presentErrorAlert(context, error, stack));
+                                  cam.resumeCamera().catchError(
+                                        (error, stack) => presentErrorAlert(context, error, stack),
+                                      );
                                 }
                               },
                               child: const Text('Update Configuration'),

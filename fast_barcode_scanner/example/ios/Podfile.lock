@@ -2,28 +2,27 @@ PODS:
   - fast_barcode_scanner (0.0.1):
     - Flutter
   - Flutter (1.0.0)
-  - SwiftLint (0.57.0)
+  - integration_test (0.0.1):
+    - Flutter
 
 DEPENDENCIES:
   - fast_barcode_scanner (from `.symlinks/plugins/fast_barcode_scanner/ios`)
   - Flutter (from `Flutter`)
-  - SwiftLint
-
-SPEC REPOS:
-  trunk:
-    - SwiftLint
+  - integration_test (from `.symlinks/plugins/integration_test/ios`)
 
 EXTERNAL SOURCES:
   fast_barcode_scanner:
     :path: ".symlinks/plugins/fast_barcode_scanner/ios"
   Flutter:
     :path: Flutter
+  integration_test:
+    :path: ".symlinks/plugins/integration_test/ios"
 
 SPEC CHECKSUMS:
-  fast_barcode_scanner: 1c1cb51eccce89ad32444eb67eccf83cf50d984e
+  fast_barcode_scanner: ec672b7ff60593416c06f48e0be3d44078fba8fd
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  SwiftLint: eb47480d47c982481592c195c221d11013a679cc
+  integration_test: 466c52117058fb34426cf6dd9bc35f61a4b454ab
 
-PODFILE CHECKSUM: 1138b81866fd33e97f98e23bf6cf2cef1e0a4932
+PODFILE CHECKSUM: a57f30d18f102dd3ce366b1d62a55ecbef2158e5
 
-COCOAPODS: 1.15.2
+COCOAPODS: 1.16.2

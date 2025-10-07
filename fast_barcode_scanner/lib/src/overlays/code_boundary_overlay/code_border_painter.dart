@@ -1,18 +1,12 @@
+import 'package:fast_barcode_scanner/fast_barcode_scanner.dart';
+import 'package:fast_barcode_scanner/src/corner_point_utils.dart';
 import 'package:flutter/material.dart';
-
-import '../../../fast_barcode_scanner.dart';
-import '../../corner_point_utils.dart';
 
 class CodeBorderPainter extends CustomPainter {
   final CodeBorderPaintBuilder? barcodePaintSelector;
   final CodeValueDisplayBuilder? textDecorator;
 
-  CodeBorderPainter({
-    required this.imageSize,
-    required this.barcodes,
-    this.barcodePaintSelector,
-    this.textDecorator,
-  });
+  CodeBorderPainter({required this.imageSize, required this.barcodes, this.barcodePaintSelector, this.textDecorator});
 
   final Size imageSize;
   final List<Barcode> barcodes;
@@ -43,10 +37,10 @@ class CodeBorderPainter extends CustomPainter {
       final corners = barcode.cornerPoints;
       if (corners != null) {
         final offsets = corners
-            .map((e) => scaleCodeCornerPoint(
-                cornerPoint: Offset(e.x.toDouble(), e.y.toDouble()),
-                analysisImageSize: imageSize,
-                widgetSize: size))
+            .map(
+              (e) =>
+                  scaleCodeCornerPoint(cornerPoint: Offset(e.x.toDouble(), e.y.toDouble()), analysisImageSize: imageSize, widgetSize: size),
+            )
             .toList();
         path.moveTo(offsets[0].dx, offsets[0].dy);
         double minX = -1, maxX = -1, minY = -1, maxY = -1;
@@ -72,10 +66,7 @@ class CodeBorderPainter extends CustomPainter {
 
         final textDecoration = _getTextDecoration(barcode);
         if (textDecoration != null) {
-          final TextPainter tp = TextPainter(
-              text: textDecoration.textSpan,
-              textAlign: TextAlign.left,
-              textDirection: TextDirection.ltr);
+          final TextPainter tp = TextPainter(text: textDecoration.textSpan, textAlign: TextAlign.left, textDirection: TextDirection.ltr);
           tp.layout();
 
           final pointsSortedByX = List.from(offsets);
@@ -101,7 +92,6 @@ class CodeBorderPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(CodeBorderPainter oldDelegate) {
-    return oldDelegate.imageSize != imageSize ||
-        oldDelegate.barcodes != barcodes;
+    return oldDelegate.imageSize != imageSize || oldDelegate.barcodes != barcodes;
   }
 }

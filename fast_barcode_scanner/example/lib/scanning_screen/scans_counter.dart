@@ -1,15 +1,13 @@
 import 'package:fast_barcode_scanner/fast_barcode_scanner.dart';
-import 'package:flutter/foundation.dart';
+import 'package:fast_barcode_scanner_example/history_screen/history_screen.dart';
+import 'package:fast_barcode_scanner_example/scan_history.dart';
 import 'package:flutter/material.dart';
 
-import '../history_screen/history_screen.dart';
-import '../scan_history.dart';
-
 class ScansCounter extends StatefulWidget {
-  const ScansCounter({Key? key}) : super(key: key);
+  const ScansCounter({super.key});
 
   @override
-  _ScansCounterState createState() => _ScansCounterState();
+  State<ScansCounter> createState() => _ScansCounterState();
 }
 
 class _ScansCounterState extends State<ScansCounter> {
@@ -39,10 +37,9 @@ class _ScansCounterState extends State<ScansCounter> {
         children: [
           TextButton(
               onPressed: () async {
-                final cam = CameraController();
+                final cam = CameraController.shared;
                 cam.pauseCamera();
-                await Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const HistoryScreen()));
+                await Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoryScreen()));
                 cam.resumeCamera();
               },
               child: const Text('History')),
@@ -55,10 +52,7 @@ class _ScansCounterState extends State<ScansCounter> {
                 width: 1,
               )),
           Expanded(
-            child: barcode != null
-                ? Text(
-                    "${history.count(barcode)}x\n${describeEnum(barcode.type)} - ${(barcode.valueType != null ? describeEnum(barcode.valueType!) : "")}: ${barcode.value}")
-                : const SizedBox.shrink(),
+            child: barcode != null ? Text("${history.count(barcode)}x\n${barcode.type.name}: ${barcode.value}") : const SizedBox.shrink(),
           ),
         ],
       ),

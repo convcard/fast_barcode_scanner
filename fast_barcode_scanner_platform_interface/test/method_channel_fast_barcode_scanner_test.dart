@@ -15,23 +15,16 @@ void main() {
   group('Initialization and disposing', () {
     setUp(() {
       mockChannel = MethodChannelMock(
-          channelName: 'com.jhoogstraat/fast_barcode_scanner',
-          methods: {
-            'init': {
-              'textureId': 0,
-              'targetRotation': 0,
-              'height': 1080,
-              'width': 1920,
-              'analysisWidth': 0,
-              'analysisHeight': 0,
-            }
-          });
+        channelName: 'com.jhoogstraat/fast_barcode_scanner',
+        methods: {
+          'init': {'textureId': 0, 'targetRotation': 0, 'height': 1080, 'width': 1920, 'analysisWidth': 0, 'analysisHeight': 0},
+        },
+      );
 
       scanner = MethodChannelFastBarcodeScanner();
     });
 
-    test('Should initialize camera and return a `PreviewConfiguration`',
-        () async {
+    test('Should initialize camera and return a `PreviewConfiguration`', () async {
       // Act
       final response = await scanner.init(
         [BarcodeType.ean13],
@@ -39,38 +32,32 @@ void main() {
         Framerate.fps60,
         DetectionMode.pauseDetection,
         CameraPosition.back,
+        ApiMode(),
       );
 
       // Assert
       expect(mockChannel.log, [
-        isMethodCall('init', arguments: {
-          'types': ['ean13'],
-          'mode': 'pauseDetection',
-          'res': 'hd1080',
-          'fps': 'fps60',
-          'pos': 'back'
-        }),
+        isMethodCall(
+          'init',
+          arguments: {
+            'types': ['ean13'],
+            'mode': 'pauseDetection',
+            'res': 'hd1080',
+            'fps': 'fps60',
+            'pos': 'back',
+          },
+        ),
       ]);
 
       expect(
         response,
-        PreviewConfiguration({
-          'textureId': 0,
-          'targetRotation': 0,
-          'height': 1080,
-          'width': 1920,
-          'analysisWidth': 0,
-          'analysisHeight': 0,
-        }),
+        PreviewConfiguration({'textureId': 0, 'targetRotation': 0, 'height': 1080, 'width': 1920, 'analysisWidth': 0, 'analysisHeight': 0}),
       );
     });
 
     test('Should forward PlatformException when init throws', () {
       // Arrange
-      mockChannel.methods['init'] = PlatformException(
-        code: 'TESTING_ERROR_CODE',
-        message: 'Mock error message used during testing.',
-      );
+      mockChannel.methods['init'] = PlatformException(code: 'TESTING_ERROR_CODE', message: 'Mock error message used during testing.');
 
       // Assert
       expect(
@@ -80,12 +67,14 @@ void main() {
           Framerate.fps60,
           DetectionMode.pauseDetection,
           CameraPosition.back,
+          ApiMode(),
         ),
-        throwsA(isA<PlatformException>()
-            .having((e) => e.code, 'code', 'TESTING_ERROR_CODE')
-            .having((e) => e.message, 'description',
-                'Mock error message used during testing.')
-            .having((e) => e.details, 'details', isNull)),
+        throwsA(
+          isA<PlatformException>()
+              .having((e) => e.code, 'code', 'TESTING_ERROR_CODE')
+              .having((e) => e.message, 'description', 'Mock error message used during testing.')
+              .having((e) => e.details, 'details', isNull),
+        ),
       );
     });
   });
@@ -93,17 +82,11 @@ void main() {
   group('Event tests', () {
     setUp(() async {
       mockChannel = MethodChannelMock(
-          channelName: 'com.jhoogstraat/fast_barcode_scanner',
-          methods: {
-            'init': {
-              'textureId': 0,
-              'targetRotation': 0,
-              'height': 1080,
-              'width': 1920,
-              'analysisWidth': 0,
-              'analysisHeight': 0,
-            }
-          });
+        channelName: 'com.jhoogstraat/fast_barcode_scanner',
+        methods: {
+          'init': {'textureId': 0, 'targetRotation': 0, 'height': 1080, 'width': 1920, 'analysisWidth': 0, 'analysisHeight': 0},
+        },
+      );
 
       scanner = MethodChannelFastBarcodeScanner();
 
@@ -113,6 +96,7 @@ void main() {
         Framerate.fps60,
         DetectionMode.pauseDetection,
         CameraPosition.back,
+        ApiMode(),
       );
     });
 
@@ -154,17 +138,11 @@ void main() {
   group('Function tests', () {
     setUp(() async {
       mockChannel = MethodChannelMock(
-          channelName: 'com.jhoogstraat/fast_barcode_scanner',
-          methods: {
-            'init': {
-              'textureId': 0,
-              'targetRotation': 0,
-              'height': 1080,
-              'width': 1920,
-              'analysisWidth': 0,
-              'analysisHeight': 0,
-            },
-          });
+        channelName: 'com.jhoogstraat/fast_barcode_scanner',
+        methods: {
+          'init': {'textureId': 0, 'targetRotation': 0, 'height': 1080, 'width': 1920, 'analysisWidth': 0, 'analysisHeight': 0},
+        },
+      );
 
       scanner = MethodChannelFastBarcodeScanner();
 
@@ -174,15 +152,13 @@ void main() {
         Framerate.fps60,
         DetectionMode.pauseDetection,
         CameraPosition.back,
+        ApiMode(),
       );
     });
 
     test('Should toggle torch and return the torch state', () async {
       // Arrange
-      mockChannel = MethodChannelMock(
-        channelName: 'com.jhoogstraat/fast_barcode_scanner',
-        methods: {'torch': true},
-      );
+      mockChannel = MethodChannelMock(channelName: 'com.jhoogstraat/fast_barcode_scanner', methods: {'torch': true});
 
       // Act
       final response = await scanner.toggleTorch();
@@ -197,20 +173,13 @@ void main() {
       mockChannel = MethodChannelMock(
         channelName: 'com.jhoogstraat/fast_barcode_scanner',
         methods: {
-          'config': {
-            'textureId': 0,
-            'targetRotation': 0,
-            'height': 720,
-            'width': 1280,
-            'analysisWidth': 0,
-            'analysisHeight': 0,
-          }
+          'config': {'textureId': 0, 'targetRotation': 0, 'height': 720, 'width': 1280, 'analysisWidth': 0, 'analysisHeight': 0},
         },
       );
 
       // Act
       final response = await scanner.changeConfiguration(
-        detectionMode: DetectionMode.continuous,
+        mode: DetectionMode.continuous,
         framerate: Framerate.fps120,
         resolution: Resolution.hd720,
         position: CameraPosition.front,
@@ -218,50 +187,34 @@ void main() {
 
       // Assert
       expect(mockChannel.log, [
-        isMethodCall('config', arguments: {
-          'mode': 'continuous',
-          'fps': 'fps120',
-          'res': 'hd720',
-          'pos': 'front'
-        })
+        isMethodCall('config', arguments: {'mode': 'continuous', 'fps': 'fps120', 'res': 'hd720', 'pos': 'front'}),
       ]);
       expect(
-        PreviewConfiguration({
-          'textureId': 0,
-          'targetRotation': 0,
-          'height': 720,
-          'width': 1280,
-          'analysisWidth': 0,
-          'analysisHeight': 0,
-        }),
+        PreviewConfiguration({'textureId': 0, 'targetRotation': 0, 'height': 720, 'width': 1280, 'analysisWidth': 0, 'analysisHeight': 0}),
         response,
       );
     });
 
-    test('Should invoke `scan` with picker and respond with a detected barcode',
-        () async {
+    test('Should invoke `scan` with picker and respond with a detected barcode', () async {
       mockChannel = MethodChannelMock(
-          channelName: 'com.jhoogstraat/fast_barcode_scanner',
-          methods: {
-            'scan': [
-              ["ean13", "1234"]
-            ]
-          });
+        channelName: 'com.jhoogstraat/fast_barcode_scanner',
+        methods: {
+          'scan': [
+            ["ean13", "1234"],
+          ],
+        },
+      );
 
       final actualBarcode = await scanner.scanImage(ImageSource.picker());
 
       expect(mockChannel.log, [isMethodCall('scan', arguments: null)]);
       expect(actualBarcode, [
-        Barcode(["ean13", "1234"])
+        Barcode(["ean13", "1234"]),
       ]);
     });
 
-    test(
-        'Should invoke `scan` with picker and return null if null is responded from the platform',
-        () async {
-      mockChannel = MethodChannelMock(
-          channelName: 'com.jhoogstraat/fast_barcode_scanner',
-          methods: {'scan': null});
+    test('Should invoke `scan` with picker and return null if null is responded from the platform', () async {
+      mockChannel = MethodChannelMock(channelName: 'com.jhoogstraat/fast_barcode_scanner', methods: {'scan': null});
 
       final actualBarcode = await scanner.scanImage(ImageSource.picker());
 
@@ -269,12 +222,8 @@ void main() {
       expect(actualBarcode, null);
     });
 
-    test(
-        'Should invoke `scan` with image and return null if null is responded from the platform',
-        () async {
-      mockChannel = MethodChannelMock(
-          channelName: 'com.jhoogstraat/fast_barcode_scanner',
-          methods: {'scan': null});
+    test('Should invoke `scan` with image and return null if null is responded from the platform', () async {
+      mockChannel = MethodChannelMock(channelName: 'com.jhoogstraat/fast_barcode_scanner', methods: {'scan': null});
 
       final image = await loadBarcodeImage();
       final bytes = await image.toByteData();
@@ -283,41 +232,31 @@ void main() {
       final actualBarcode = await scanner.scanImage(source);
 
       expect(mockChannel.log, [
-        isMethodCall('scan', arguments: [bytes.buffer.asUint8List(), 10])
+        isMethodCall('scan', arguments: [bytes.buffer.asUint8List(), 10]),
       ]);
       expect(actualBarcode, null);
     });
 
     test('Should invoke `start`', () async {
       // Arrange
-      mockChannel = MethodChannelMock(
-          channelName: 'com.jhoogstraat/fast_barcode_scanner',
-          methods: {'start': null});
+      mockChannel = MethodChannelMock(channelName: 'com.jhoogstraat/fast_barcode_scanner', methods: {'start': null});
 
       // Act
       await scanner.start();
 
       // Assert
-      expect(
-        mockChannel.log,
-        [isMethodCall('start', arguments: null)],
-      );
+      expect(mockChannel.log, [isMethodCall('start', arguments: null)]);
     });
 
     test('Should invoke `stop`', () async {
       // Arrange
-      mockChannel = MethodChannelMock(
-          channelName: 'com.jhoogstraat/fast_barcode_scanner',
-          methods: {'stop': null});
+      mockChannel = MethodChannelMock(channelName: 'com.jhoogstraat/fast_barcode_scanner', methods: {'stop': null});
 
       // Act
       await scanner.stop();
 
       // Assert
-      expect(
-        mockChannel.log,
-        [isMethodCall('stop', arguments: null)],
-      );
+      expect(mockChannel.log, [isMethodCall('stop', arguments: null)]);
     });
   });
 
@@ -326,22 +265,10 @@ void main() {
       mockChannel = MethodChannelMock(
         channelName: 'com.jhoogstraat/fast_barcode_scanner',
         methods: {
-          'start': PlatformException(
-            code: 'TESTING_ERROR_CODE',
-            message: 'Mock error message used during testing.',
-          ),
-          'torch': PlatformException(
-            code: 'TESTING_ERROR_CODE',
-            message: 'Mock error message used during testing.',
-          ),
-          'stop': PlatformException(
-            code: 'TESTING_ERROR_CODE',
-            message: 'Mock error message used during testing.',
-          ),
-          'config': PlatformException(
-            code: 'TESTING_ERROR_CODE',
-            message: 'Mock error message used during testing.',
-          )
+          'start': PlatformException(code: 'TESTING_ERROR_CODE', message: 'Mock error message used during testing.'),
+          'torch': PlatformException(code: 'TESTING_ERROR_CODE', message: 'Mock error message used during testing.'),
+          'stop': PlatformException(code: 'TESTING_ERROR_CODE', message: 'Mock error message used during testing.'),
+          'config': PlatformException(code: 'TESTING_ERROR_CODE', message: 'Mock error message used during testing.'),
         },
       );
 
@@ -350,35 +277,39 @@ void main() {
       // Assert
       expect(
         () => scanner.start(),
-        throwsA(isA<PlatformException>()
-            .having((e) => e.code, 'code', 'TESTING_ERROR_CODE')
-            .having((e) => e.message, 'description',
-                'Mock error message used during testing.')
-            .having((e) => e.details, 'details', isNull)),
+        throwsA(
+          isA<PlatformException>()
+              .having((e) => e.code, 'code', 'TESTING_ERROR_CODE')
+              .having((e) => e.message, 'description', 'Mock error message used during testing.')
+              .having((e) => e.details, 'details', isNull),
+        ),
       );
       expect(
         () => scanner.stop(),
-        throwsA(isA<PlatformException>()
-            .having((e) => e.code, 'code', 'TESTING_ERROR_CODE')
-            .having((e) => e.message, 'description',
-                'Mock error message used during testing.')
-            .having((e) => e.details, 'details', isNull)),
+        throwsA(
+          isA<PlatformException>()
+              .having((e) => e.code, 'code', 'TESTING_ERROR_CODE')
+              .having((e) => e.message, 'description', 'Mock error message used during testing.')
+              .having((e) => e.details, 'details', isNull),
+        ),
       );
       expect(
         () => scanner.toggleTorch(),
-        throwsA(isA<PlatformException>()
-            .having((e) => e.code, 'code', 'TESTING_ERROR_CODE')
-            .having((e) => e.message, 'description',
-                'Mock error message used during testing.')
-            .having((e) => e.details, 'details', isNull)),
+        throwsA(
+          isA<PlatformException>()
+              .having((e) => e.code, 'code', 'TESTING_ERROR_CODE')
+              .having((e) => e.message, 'description', 'Mock error message used during testing.')
+              .having((e) => e.details, 'details', isNull),
+        ),
       );
       expect(
         () => scanner.changeConfiguration(),
-        throwsA(isA<PlatformException>()
-            .having((e) => e.code, 'code', 'TESTING_ERROR_CODE')
-            .having((e) => e.message, 'description',
-                'Mock error message used during testing.')
-            .having((e) => e.details, 'details', isNull)),
+        throwsA(
+          isA<PlatformException>()
+              .having((e) => e.code, 'code', 'TESTING_ERROR_CODE')
+              .having((e) => e.message, 'description', 'Mock error message used during testing.')
+              .having((e) => e.details, 'details', isNull),
+        ),
       );
     });
   });

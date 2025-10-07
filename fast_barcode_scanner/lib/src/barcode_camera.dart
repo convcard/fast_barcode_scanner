@@ -10,40 +10,35 @@ Widget _defaultOnError(BuildContext context, Object? error) {
   return Padding(
     padding: const EdgeInsets.all(8.0),
     child: Center(
-      child: Text(
-        "Error:\n$error",
-        style: const TextStyle(color: Colors.white),
-      ),
+      child: Text("Error:\n$error", style: const TextStyle(color: Colors.white)),
     ),
   );
 }
 
 /// The main class connecting the platform code to the UI.
 ///
-/// This class is used in the widget tree and connects to the camera
-/// as soon as didChangeDependencies gets called.
+/// This class connects to the camera as soon as `didChangeDependencies` gets called.
 class BarcodeCamera extends StatefulWidget {
   const BarcodeCamera({
-    Key? key,
+    super.key,
     required this.types,
-    this.mode = DetectionMode.pauseVideo,
     this.resolution = Resolution.hd720,
     this.framerate = Framerate.fps30,
+    this.mode = DetectionMode.pauseVideo,
     this.position = CameraPosition.back,
-    this.apiMode,
+    this.api = const ApiMode(),
     this.onScan,
     this.children = const [],
     this.dispose = true,
     ErrorCallback? onError,
-  })  : onError = onError ?? _defaultOnError,
-        super(key: key);
+  }) : onError = onError ?? _defaultOnError;
 
   final List<BarcodeType> types;
   final Resolution resolution;
   final Framerate framerate;
   final DetectionMode mode;
   final CameraPosition position;
-  final IOSApiMode? apiMode;
+  final ApiMode api;
   final OnDetectionHandler? onScan;
   final List<Widget> children;
   final ErrorCallback onError;
@@ -55,47 +50,41 @@ class BarcodeCamera extends StatefulWidget {
 
 class BarcodeCameraState extends State<BarcodeCamera> {
   var _opacity = 0.0;
+  var showingError = false;
 
-  final cameraController = CameraController();
+  final cameraController = CameraController.shared;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final configurationFuture = cameraController.state.isInitialized
-        ? cameraController.configure(
-            types: widget.types,
-            resolution: widget.resolution,
-            framerate: widget.framerate,
-            position: widget.position,
-            onScan: onScan,
-          )
+    final configurationFuture = cameraController.state.value.isInitialized
+        ? cameraController.configure(types: widget.types, mode: widget.mode, position: widget.position, onScan: widget.onScan)
         : cameraController.initialize(
             types: widget.types,
             resolution: widget.resolution,
             framerate: widget.framerate,
+            mode: widget.mode,
             position: widget.position,
-            detectionMode: widget.mode,
-            onScan: onScan,
-            apiMode: widget.apiMode,
+            onScan: widget.onScan,
+            api: widget.api,
           );
 
     configurationFuture
-        .whenComplete(() => _safeSetState(() => _opacity = 1.0))
-        .onError((error, stackTrace) => _safeSetState(() {}));
+        .whenComplete(() => setState(() => _opacity = 1.0))
+        .onError((error, stackTrace) => setState(() => showingError = true));
 
-    cameraController.events.addListener(onScannerEvent);
-  }
-
-  void onScan(List<Barcode> barcodes) {
-    widget.onScan?.call(barcodes);
+    cameraController.eventNotifier.addListener(onScannerEvent);
   }
 
   void onScannerEvent() {
-    if (!mounted) {
-      return;
+    if (!mounted) return;
+
+    if (cameraController.eventNotifier.value != ScannerEvent.error && showingError) {
+      setState(() => showingError = false);
+    } else if (cameraController.eventNotifier.value == ScannerEvent.error) {
+      setState(() => showingError = true);
     }
-    _safeSetState(() {});
   }
 
   @override
@@ -106,36 +95,41 @@ class BarcodeCameraState extends State<BarcodeCamera> {
       cameraController.pauseCamera();
     }
 
-    cameraController.events.removeListener(onScannerEvent);
+    cameraController.eventNotifier.removeListener(onScannerEvent);
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final cameraState = cameraController.state;
+    final cameraState = cameraController.state.value;
+
     return ColoredBox(
       color: Colors.black,
       child: AnimatedOpacity(
         opacity: _opacity,
-        duration: const Duration(milliseconds: 260),
-        child: cameraController.events.value == ScannerEvent.error
-            ? widget.onError(
-                context,
-                cameraState.error ?? "Unknown error occurred",
-              )
+        duration: const Duration(milliseconds: 250),
+        child: cameraController.eventNotifier.value == ScannerEvent.error
+            ? widget.onError(context, cameraState.error ?? "Unknown error occurred")
             : Stack(
                 fit: StackFit.expand,
                 children: [
-                  if (cameraState.isInitialized)
-                    _buildPreview(cameraState.previewConfig!),
-                  ...widget.children
+                  if (cameraState.isInitialized) _CameraPreview(config: cameraState.cameraInformation!),
+                  ...widget.children,
                 ],
               ),
       ),
     );
   }
+}
 
-  Widget _buildPreview(PreviewConfiguration config) {
+class _CameraPreview extends StatelessWidget {
+  const _CameraPreview({required this.config});
+
+  final PreviewConfiguration config;
+
+  @override
+  Widget build(BuildContext context) {
     return FittedBox(
       fit: BoxFit.cover,
       child: SizedBox(
@@ -145,15 +139,9 @@ class BarcodeCameraState extends State<BarcodeCamera> {
           builder: (_) {
             switch (defaultTargetPlatform) {
               case TargetPlatform.android:
-                return Texture(
-                  textureId: config.textureId,
-                  filterQuality: FilterQuality.none,
-                );
+                return Texture(textureId: config.textureId, filterQuality: FilterQuality.none);
               case TargetPlatform.iOS:
-                return const UiKitView(
-                  viewType: "fast_barcode_scanner.preview",
-                  creationParamsCodec: StandardMessageCodec(),
-                );
+                return const UiKitView(viewType: "fast_barcode_scanner.preview", creationParamsCodec: StandardMessageCodec());
               default:
                 throw UnsupportedError("Unsupported platform");
             }
@@ -161,11 +149,5 @@ class BarcodeCameraState extends State<BarcodeCamera> {
         ),
       ),
     );
-  }
-
-  void _safeSetState(VoidCallback fn) {
-    if (context.mounted) {
-      setState(fn);
-    }
   }
 }

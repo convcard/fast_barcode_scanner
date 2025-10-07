@@ -1,21 +1,3 @@
-## 2.1.1
-- Remove rethrow
-
-## 2.1.0
-- Add flutter exception handling, safe set state for barcode camera
-
-## 2.0.0-dev.10
-- Update nexus to gojitsu
-
-## 2.0.0-dev.9
-- fix android build
-
-## 2.0.0-dev.8
-- Fix iOS freezing issue
-
-## 2.0.0-dev.7
-- Fix error handling for iOS Vision scanner
-
 ## 2.0.0-dev.2
 
 - Analyze still images from binary or native image pickers on iOS and Android

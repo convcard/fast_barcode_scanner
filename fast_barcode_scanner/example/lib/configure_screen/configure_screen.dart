@@ -1,40 +1,24 @@
 import 'package:fast_barcode_scanner/fast_barcode_scanner.dart';
-import 'package:fast_barcode_scanner_example/configure_screen/overlay_selector.dart';
-import 'package:fast_barcode_scanner_example/scanning_screen/scanning_overlay_config.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'type_selector.dart';
 
-typedef OnOverlayConfigurationChanged = void Function(
-    ScanningOverlayConfig overlayConfig);
-
 class ConfigureScreen extends StatefulWidget {
-  const ConfigureScreen(this._currentConfiguration, this._overlayConfig,
-      {Key? key, this.onOverlayConfigurationChanged})
-      : super(key: key);
-
-  final ScannerConfiguration _currentConfiguration;
-  final ScanningOverlayConfig _overlayConfig;
-  final OnOverlayConfigurationChanged? onOverlayConfigurationChanged;
+  const ConfigureScreen({super.key});
 
   @override
   State<ConfigureScreen> createState() => _ConfigureScreenState();
 }
 
 class _ConfigureScreenState extends State<ConfigureScreen> {
-  late ScannerConfiguration _config;
-  late ScanningOverlayConfig _overlayConfig;
+  _ConfigureScreenState();
 
-  @override
-  void initState() {
-    _config = widget._currentConfiguration;
-    _overlayConfig = widget._overlayConfig;
-    super.initState();
-  }
+  final cameraController = CameraController.shared;
 
   @override
   Widget build(BuildContext context) {
+    final state = cameraController.state.value;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Configuration'),
@@ -54,18 +38,18 @@ class _ConfigureScreenState extends State<ConfigureScreen> {
               ),
             );
 
-            if (shouldReturn == true) {
+            if (shouldReturn && context.mounted) {
               Navigator.pop(context);
             }
           },
         ),
         actions: [
           TextButton(
+            onPressed: applyChanges,
             child: const Text(
               'Apply',
               style: TextStyle(color: Colors.white),
             ),
-            onPressed: applyChanges,
           )
         ],
       ),
@@ -75,102 +59,75 @@ class _ConfigureScreenState extends State<ConfigureScreen> {
           tiles: [
             ListTile(
               title: const Text('Active code types'),
-              subtitle:
-                  Text(_config.types.map((e) => describeEnum(e)).join(', ')),
+              subtitle: Text(state.scannerConfig!.types.map((e) => e.name).join(', ')),
               onTap: () async {
-                final types = await Navigator.push<List<BarcodeType>>(context,
-                    MaterialPageRoute(builder: (_) {
-                  return BarcodeTypeSelector(_config);
+                final types = await Navigator.push<List<BarcodeType>>(context, MaterialPageRoute(builder: (_) {
+                  return BarcodeTypeSelector(state.scannerConfig!);
                 }));
-                setState(() {
-                  _config = _config.copyWith(types: types);
-                });
+                // TODO: Update camera config
               },
             ),
-            ListTile(
-              title: const Text('Resolution'),
-              trailing: DropdownButton<Resolution>(
-                  value: _config.resolution,
-                  onChanged: (value) {
-                    setState(() {
-                      _config = _config.copyWith(resolution: value);
-                    });
-                  },
-                  items: buildDropdownItems(Resolution.values)),
-            ),
-            ListTile(
-              title: const Text('Framerate'),
-              trailing: DropdownButton<Framerate>(
-                  value: _config.framerate,
-                  onChanged: (value) {
-                    setState(() {
-                      _config = _config.copyWith(framerate: value);
-                    });
-                  },
-                  items: buildDropdownItems(Framerate.values)),
-            ),
+            // ListTile(
+            //   title: const Text('Mode'),
+            //   trailing: DropdownButton<PerformanceMode>(
+            //       value: state.scannerConfig!.mode,
+            //       onChanged: (value) {
+            //         // TODO: Update camera config
+            //       },
+            //       items: buildDropdownItems(PerformanceMode.values)),
+            // ),
             ListTile(
               title: const Text('Position'),
               trailing: DropdownButton<CameraPosition>(
-                  value: _config.position,
+                  value: state.scannerConfig!.position,
                   onChanged: (value) {
-                    setState(() {
-                      _config = _config.copyWith(position: value);
-                    });
+                    // TODO: Update camera config
                   },
                   items: buildDropdownItems(CameraPosition.values)),
             ),
             ListTile(
               title: const Text('Detection Mode'),
               trailing: DropdownButton<DetectionMode>(
-                  value: _config.detectionMode,
-                  onChanged: (value) {
-                    setState(() {
-                      _config = _config.copyWith(detectionMode: value);
-                    });
-                  },
-                  items: buildDropdownItems(DetectionMode.values)),
+                value: state.scannerConfig!.mode,
+                onChanged: (value) {
+                  // TODO: Update camera configt
+                },
+                items: buildDropdownItems(DetectionMode.values),
+              ),
             ),
-            ListTile(
-              title: const Text('Overlay'),
-              subtitle: Text(_overlayConfig.enabledOverlays
-                  .map((e) => describeEnum(e))
-                  .join(', ')),
-              onTap: () async {
-                final overlays =
-                    await Navigator.push<List<ScanningOverlayType>>(context,
-                        MaterialPageRoute(builder: (_) {
-                  return OverlaySelector(_overlayConfig);
-                }));
-                setState(() {
-                  _overlayConfig = _overlayConfig.copyWith(
-                    enabledOverlays: overlays,
-                  );
-                });
-              },
-            ),
+            const Divider(),
+            //   CheckboxListTile(
+            //   value: _selected.contains(item),
+            //   title: Text("Material Design"),
+            //   onChanged: (newValue) {
+            //     setState(() {
+            //       if (newValue == true) {
+            //         _selected.add(item);
+            //       } else {
+            //         _selected.remove(item);
+            //       }
+            //     });
+            //   },
+            // );
           ],
         ).toList(),
       ),
     );
   }
 
-  List<DropdownMenuItem<E>> buildDropdownItems<E extends Object>(
-          List<E> enumCases) =>
-      enumCases
-          .map((v) => DropdownMenuItem(value: v, child: Text(describeEnum(v))))
-          .toList();
+  List<DropdownMenuItem<E>> buildDropdownItems<E extends Enum>(List<E> enumCases) =>
+      enumCases.map((v) => DropdownMenuItem(value: v, child: Text(v.name))).toList();
 
   Future<void> applyChanges() async {
     try {
-      await CameraController().configure(
-        types: _config.types,
-        framerate: _config.framerate,
-        resolution: _config.resolution,
-        detectionMode: _config.detectionMode,
-        position: _config.position,
+      await CameraController.shared.configure(
+        types: cameraController.state.value.scannerConfig!.types,
+        mode: cameraController.state.value.scannerConfig!.mode,
+        position: cameraController.state.value.scannerConfig!.position,
       );
     } catch (error) {
+      if (!mounted) return;
+
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
@@ -180,8 +137,10 @@ class _ConfigureScreenState extends State<ConfigureScreen> {
       );
 
       return;
+    } finally {
+      if (mounted) {
+        Navigator.pop(context);
+      }
     }
-
-    Navigator.pop(context, _config);
   }
 }
